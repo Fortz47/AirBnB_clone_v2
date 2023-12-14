@@ -1,35 +1,56 @@
 #!/usr/bin/python3
 """
-    Distributes an archive to your web servers
+that distributes an archive to your web servers,
+using the function do_deploy
 """
 
-from fabric.api import put, run, env
-from os.path import exists
+from fabric.api import local, run, put, env
+from datetime import datetime
+import os
+import re
 
-env.hosts = ['52.72.14.202', '18.204.9.164']
-env.password = None
+env.user = "ubuntu"
+env.hosts = ['18.234.130.161', '54.157.184.77']
+
+
+def do_pack():
+    """creates a .tgz archive"""
+    date = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    archive_name = f"versions/web_static_{date}.tgz"
+    print(f"Packing web_static to {archive_name}")
+    local('mkdir -p versions')
+    result = local(f"tar -cvzf {archive_name} web_static")
+    if result.return_code == 0:
+        return archive_name
+    return None
 
 
 def do_deploy(archive_path):
-    """
-    Deploys an archive to a server
-    """
-    if exists(archive_path) is False:
+    """distributes an archive to your web servers"""
+    if not os.path.exists(archive_path):
         return False
+
     try:
-        file_N = archive_path.split("/")[-1]
-        n = file_N.split(".")[0]
-        path = "/data/web_static/releases/"
         put(archive_path, '/tmp/')
-        run('mkdir -p {}{}/'.format(path, n))
-        run('tar -xzf /tmp/{} -C {}{}/'.format(file_N, path, n))
-        run('rm /tmp/{}'.format(file_N))
-        run('mv {0}{1}/web_static/* {0}{1}/'.format(path, n))
-        run('rm -rf {}{}/web_static'.format(path, n))
-        run('rm -rf /data/web_static/current')
-        run('ln -s {}{}/ /data/web_static/current'.format(path, n))
-        run('chmod -R 755 /data/')
-        print("New version deployed!")
-        return True
-    except FileNotFoundError:
+        archive_tgz = re.search('(web_static_.*.tgz$)', archive_path).group(1)
+        archive = archive_tgz[:-4]
+        run(f'mkdir -p /data/web_static/releases/{archive}')
+        extract_cmd = f'tar -xz \
+        -C /data/web_static/releases/{archive} \
+        -f /tmp/{archive_tgz}'
+        run(extract_cmd)
+        run(f'rm /tmp/{archive_tgz}')
+
+        run(f'mv /data/web_static/releases/{archive}/web_static/* \
+        /data/web_static/releases/{archive}/')
+
+        run(f'rm -rf /data/web_static/releases/{archive}/web_static')
+        run('rm /data/web_static/current')
+        path_target = f'/data/web_static/releases/{archive}'
+        run(f'ln -s {path_target} /data/web_static/current')
+    except Exception as e:
+        print(e)
         return False
+    print("New version deployed!")
+    return True

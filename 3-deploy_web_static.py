@@ -1,51 +1,65 @@
 #!/usr/bin/python3
 """
-    Creates and distributes an archive to the web servers
+creates and that distributes an archive to
+your web servers, using the function do_deploy
 """
 
-from fabric.api import env, local, put, run
+from fabric.api import local, run, put, env
 from datetime import datetime
-from os.path import exists, isdir
-env.hosts = ['52.72.14.202', '18.204.9.164']
+import os
+import re
+
+env.user = "ubuntu"
+env.hosts = ['18.234.130.161', '54.157.184.77']
 
 
 def do_pack():
-    """generates a tgz archive"""
-    try:
-        date = datetime.now().strftime("%Y%m%d%H%M%S")
-        if isdir("versions") is False:
-            local("mkdir versions")
-        file_name = "versions/web_static_{}.tgz".format(date)
-        local("tar -cvzf {} web_static".format(file_name))
-        return file_name
-    except FileNotFoundError:
-        return None
+    """creates a .tgz archive"""
+    date = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    archive_name = f"versions/web_static_{date}.tgz"
+    print(f"Packing web_static to {archive_name}")
+    local('mkdir -p versions')
+    result = local(f"tar -cvzf {archive_name} web_static")
+    if result.return_code == 0:
+        return archive_name
+    return None
 
 
 def do_deploy(archive_path):
-    """distributes an archive to the web servers"""
-    if exists(archive_path) is False:
+    """distributes an archive to your web servers"""
+    if not os.path.exists(archive_path):
         return False
+
     try:
-        file_n = archive_path.split("/")[-1]
-        no_ext = file_n.split(".")[0]
-        path = "/data/web_static/releases/"
         put(archive_path, '/tmp/')
-        run('mkdir -p {}{}/'.format(path, no_ext))
-        run('tar -xzf /tmp/{} -C {}{}/'.format(file_n, path, no_ext))
-        run('rm /tmp/{}'.format(file_n))
-        run('mv {0}{1}/web_static/* {0}{1}/'.format(path, no_ext))
-        run('rm -rf {}{}/web_static'.format(path, no_ext))
-        run('rm -rf /data/web_static/current')
-        run('ln -s {}{}/ /data/web_static/current'.format(path, no_ext))
-        return True
-    except FileNotFoundError:
+        archive_tgz = re.search('(web_static_.*.tgz$)', archive_path).group(1)
+        archive = archive_tgz[:-4]
+        run(f'mkdir -p /data/web_static/releases/{archive}')
+        extract_cmd = f'tar -xz \
+        -C /data/web_static/releases/{archive} \
+        -f /tmp/{archive_tgz}'
+        run(extract_cmd)
+        run(f'rm /tmp/{archive_tgz}')
+
+        run(f'mv /data/web_static/releases/{archive}/web_static/* \
+        /data/web_static/releases/{archive}/')
+
+        run(f'rm -rf /data/web_static/releases/{archive}/web_static')
+        run('rm /data/web_static/current')
+        path_target = f'/data/web_static/releases/{archive}'
+        run(f'ln -s {path_target} /data/web_static/current')
+    except Exception as e:
+        print(e)
         return False
+    print("New version deployed!")
+    return True
 
 
 def deploy():
-    """creates and distributes an archive to the web servers"""
+    """creates and distributes an archive to your web servers"""
     archive_path = do_pack()
-    if archive_path is None:
-        return False
-    return do_deploy(archive_path)
+    if archive_path:
+        status = do_deploy(archive_path)
+        return status
+    return False
