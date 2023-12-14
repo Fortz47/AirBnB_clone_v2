@@ -49,6 +49,7 @@ def do_deploy(archive_path):
         run('rm /data/web_static/current')
         path_target = f'/data/web_static/releases/{archive}'
         run(f'ln -s {path_target} /data/web_static/current')
+        run('chmod -R 755 /data/')
     except Exception as e:
         print(e)
         return False
