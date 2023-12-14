@@ -13,17 +13,17 @@ env.user = "ubuntu"
 env.hosts = ['18.234.130.161', '54.157.184.77']
 
 
-def do_pack():
-    """creates a .tgz archive"""
-    date = datetime.now().strftime("%Y%m%d%H%M%S")
+# def do_pack():
+#     """creates a .tgz archive"""
+#     date = datetime.now().strftime("%Y%m%d%H%M%S")
 
-    archive_name = f"versions/web_static_{date}.tgz"
-    print(f"Packing web_static to {archive_name}")
-    local('mkdir -p versions')
-    result = local(f"tar -cvzf {archive_name} web_static")
-    if result.return_code == 0:
-        return archive_name
-    return None
+#     archive_name = f"versions/web_static_{date}.tgz"
+#     print(f"Packing web_static to {archive_name}")
+#     local('mkdir -p versions')
+#     result = local(f"tar -cvzf {archive_name} web_static")
+#     if result.return_code == 0:
+#         return archive_name
+#     return None
 
 
 def do_deploy(archive_path):
