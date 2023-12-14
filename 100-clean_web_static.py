@@ -68,7 +68,7 @@ def do_clean(number=0):
     archives_local = os.listdir("versions")
     archives_remote = run('ls /data/web_static/releases').split()
     archives_remote.remove('test')
-    number = 1 if number == 0 else int(number)
+    number = 1 if int(number) == 0 else int(number)
     count_local = len(archives_local) - number
     count_remote = len(archives_remote) - number
     if count_local > 0:
