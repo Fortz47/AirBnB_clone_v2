@@ -1,5 +1,8 @@
 #!/usr/bin/python3
-"""starts a Flask web application:"""
+"""
+Module Name: web_flask/9-states.py
+Description: Starts Flask web application for AirBnB clone
+"""
 
 from models import storage
 from flask import Flask, render_template
