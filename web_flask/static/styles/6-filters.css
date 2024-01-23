@@ -52,14 +52,16 @@ h4 {
 
 .popover {
 	display: none;
-	margin: 0;
-	padding: 0 0 0 20px;
-	list-style-type: none;
-	background-color: #FAFAFA;
-	border: 1px solid #DDD;
-	border-radius: 4px;
-	position: relative;
-	z-index: 1;
+    margin: 0;
+    padding: 0 0 0 20px;
+    list-style-type: none;
+    background-color: #FAFAFA;
+    border: 1px solid #DDD;
+    border-radius: 4px;
+    position: relative;
+	max-height: 300px;
+    overflow-y: auto;
+    z-index: 1;
 }
 
 .popover > li {

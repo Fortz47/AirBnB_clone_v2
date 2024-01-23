@@ -13,6 +13,7 @@ def teardown(exception):
     """closes sqlalchemy session"""
     storage.close()
 
+
 @app.route('/states', strict_slashes=False)
 @app.route('/states/<id>', strict_slashes=False)
 def state_list(id=None):
